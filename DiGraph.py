@@ -129,10 +129,6 @@ class DiGraph(GraphInterface):
             self.mc += 1
             return True
 
-    def invertG(self, graph):
-
-        return {(k[1], k[0]): v for k, v in self.edges.items()}  # k -> (,)   v-> float
-
     def there_is_edge(self, id1:int, id2:int)->bool:
         edge_to_check = (id1,id2)
         if self.edges.keys().__contains__(edge_to_check):

@@ -15,10 +15,10 @@ class GraphAlgo(GraphAlgoInterface):
     def __init__(self, graph: DiGraph = None):
         self.graph = DiGraph() if graph is None else graph
 
-
     def get_graph(self) -> GraphInterface:
         return self.graph
-    #getting the graph information
+
+    # getting the graph information
 
     def load_from_json(self, file_name: str) -> bool:
         try:
@@ -39,7 +39,6 @@ class GraphAlgo(GraphAlgoInterface):
         # here we load a graph from a json file, because that in the given graphs there are
         # nodes with position that equal to None, we had to fix that problem too
 
-
     def save_to_json(self, file_name: str) -> bool:
         with open(file_name, "w") as f:
             tempdict = {}
@@ -59,9 +58,6 @@ class GraphAlgo(GraphAlgoInterface):
             json.dump(ans, fp=f, indent=2)
             return True
         # Here we are saving the graph in json file format
-
-
-
 
     def shortest_path(self, id1: int, id2: int) -> (float, list):
         dict = {node: float('inf') for node in range(self.graph.v_size())}
@@ -108,24 +104,27 @@ class GraphAlgo(GraphAlgoInterface):
         if len(node_lst) == 0:
             return ([], -1)
         all_Paths = [[]]
-        weight_list = [()]
+        weight_list = []
         for i in node_lst:
             for j in node_lst:
                 if i == j:
                     continue
-                all_Paths[i] = self.shortest_path(i, j)[1]
+                all_Paths.append(self.shortest_path(i, j)[1])
         for list1 in all_Paths:
+            if len(list1) == 0: continue
             res = list1.__contains__(node_lst)
             if res:
                 currect_paths.append(list1)
             else:
                 for list2 in all_Paths:
+                    if len(list2) == 0: continue
                     if list1[-1] == list2[0] and list1[0] != list2[-1]:
-                        currect_paths.append(list1[0:-2] + list2)
-        for currect in currect_paths:
-            weight_list.append(currect, self.weight_calc(currect))
+                        currect_paths.append(list1[0:len(list1)-1] + list2)
 
-        return min(weight_list[1])
+        for currect in currect_paths:
+            weight_list.append((currect, self.weight_calc(currect)))
+
+        return min(weight_list, key=lambda lst: lst[1])
 
     def weight_calc(self, list):
         weight = 0
@@ -134,91 +133,94 @@ class GraphAlgo(GraphAlgoInterface):
             weight += self.graph.edges[e]
         return weight
 
-    def centerPoint(self) -> (int, float):
-        if not self.isConnected(self.graph):
-            return None
-        dict = {}
-        for node1 in self.graph.nodes.keys():
-            temp_dict = {}
-            for node2 in self.graph.nodes.keys():
-                if (node1 != node2):
-                    weight = self.shortest_path(node1, node2)[0]
-                    temp_dict[(node1, node2)] = weight
-            dict[node1] = max(temp_dict.values())
-        i = min(dict.values())
-        key_list = list(dict.keys())
-        value_list = list(dict.values())
-        t = value_list.index(i)
-        return t, i
 
-    def plot_graph(self) -> None:
+def centerPoint(self) -> (int, float):
+    if not self.isConnected(self.graph):
+        return None
+    dict = {}
+    for node1 in self.graph.nodes.keys():
+        temp_dict = {}
+        for node2 in self.graph.nodes.keys():
+            if (node1 != node2):
+                weight = self.shortest_path(node1, node2)[0]
+                temp_dict[(node1, node2)] = weight
+        dict[node1] = max(temp_dict.values())
+    i = min(dict.values())
+    key_list = list(dict.keys())
+    value_list = list(dict.values())
+    t = value_list.index(i)
+    return t, i
 
-        nodes = self.graph.nodes
-        edges = self.graph.edges
-        ids, x, y = [], [], []
-        # z=[]
-        for k, v in nodes.items():
-            ids.append(k)
-            if v != None:
-                x.append(v[0])
-                y.append(v[1])
+
+def plot_graph(self) -> None:
+    nodes = self.graph.nodes
+    edges = self.graph.edges
+    ids, x, y = [], [], []
+    # z=[]
+    for k, v in nodes.items():
+        ids.append(k)
+        if v != None:
+            x.append(v[0])
+            y.append(v[1])
+        else:
+            if k <= 2:
+                x.append(5 * k)
+                y.append(4 * k)
             else:
-                if k <= 2:
-                    x.append(5 * k)
-                    y.append(4 * k)
-                else:
-                    b = random.random()
-                    c = random.random()
-                    x.append(k * k * b)
-                    y.append(k * k * c)
+                b = random.random()
+                c = random.random()
+                x.append(k * k * b)
+                y.append(k * k * c)
 
-        fig = plt.figure()
-        ax = fig.subplots()
-        plt.subplots_adjust(bottom=0.4)
-        p, = ax.plot(x, y, color="black", marker="o")
-        fig.set_size_inches(17.5, 7.5, forward=True)
-        ax.scatter(x, y, c='red')
+    fig = plt.figure()
+    ax = fig.subplots()
+    plt.subplots_adjust(bottom=0.4)
+    p, = ax.plot(x, y, color="black", marker="o")
+    fig.set_size_inches(17.5, 7.5, forward=True)
+    ax.scatter(x, y, c='red')
 
-        for i, txt in enumerate(ids):
-            ax.annotate(txt, (x[i], y[i]), color='red')
+    for i, txt in enumerate(ids):
+        ax.annotate(txt, (x[i], y[i]), color='red')
 
-        for src, dest in edges.keys():
-            if nodes[src] != None and nodes[dest] != None:
-                _x, _y, _ = nodes[src]
-                _dx, _dy, _ = np.array(nodes[dest]) - np.array(nodes[src])
-                r = 0.2
-                x, y = _x + r * _dx, _y + r * _dy
-                dx, dy = (1 - r) * _dx, (1 - r) * _dy
-                plt.arrow(x, y, dx, dy, width=5e-5, length_includes_head=True)
-            else:
-                plt.arrow(x[src], y[src], x[dest], y[dest], width=5e-5, length_includes_head=True)
+    for src, dest in edges.keys():
+        if nodes[src] != None and nodes[dest] != None:
+            _x, _y, _ = nodes[src]
+            _dx, _dy, _ = np.array(nodes[dest]) - np.array(nodes[src])
+            r = 0.2
+            x, y = _x + r * _dx, _y + r * _dy
+            dx, dy = (1 - r) * _dx, (1 - r) * _dy
+            plt.arrow(x, y, dx, dy, width=5e-5, length_includes_head=True)
+        else:
+            plt.arrow(x[src], y[src], x[dest], y[dest], width=5e-5, length_includes_head=True)
 
-        def add_edge(id1, id2):
-            if nodes.keys().__contains__(id1) and nodes.keys().__contains__(id2):
-                x, y, _ = nodes[id1]
-                dx, dy, _ = nodes[id2]
-                ax.plot(x, y, color="blue")
+    def add_edge(id1, id2):
+        if nodes.keys().__contains__(id1) and nodes.keys().__contains__(id2):
+            x, y, _ = nodes[id1]
+            dx, dy, _ = nodes[id2]
+            ax.plot(x, y, color="blue")
 
-        # axes =plt.axes([0.06, 0.05, 0.15, 0.075])
-        # edge_button= Button(axes,'ADD EDGE',color= "blue")
-        # edge_button.on_clicked(add_edge(1,10))
+    # axes =plt.axes([0.06, 0.05, 0.15, 0.075])
+    # edge_button= Button(axes,'ADD EDGE',color= "blue")
+    # edge_button.on_clicked(add_edge(1,10))
 
-        plt.show()
+    plt.show()
 
-    def isConnected(self, g):
-        for nodeid in self.graph.get_all_v().keys():
-            visit = [False] * self.graph.v_size()
-            self.DFS(g, nodeid, visit)
-            for x in visit:
-                if not x:
-                    return False
-        return True
 
-    def DFS(self, graph, nodeid, visit):
-        visit[nodeid] = True
-        for e in self.graph.all_out_edges_of_node(nodeid):
-            if not visit[e[1]]:
-                self.DFS(graph, e[1], visit)
+def isConnected(self, g):
+    for nodeid in self.graph.get_all_v().keys():
+        visit = [False] * self.graph.v_size()
+        self.DFS(g, nodeid, visit)
+        for x in visit:
+            if not x:
+                return False
+    return True
+
+
+def DFS(self, graph, nodeid, visit):
+    visit[nodeid] = True
+    for e in self.graph.all_out_edges_of_node(nodeid):
+        if not visit[e[1]]:
+            self.DFS(graph, e[1], visit)
 
 
 if __name__ == '__main__':
@@ -234,5 +236,6 @@ if __name__ == '__main__':
     # print(galgo.graph.get_all_v())
     g = galgo.graph
     print(g)
+    print((galgo.TSP([0, 1, 5])))
     e = g.edges
-    galgo.plot_graph()
+# galgo.plot_graph()

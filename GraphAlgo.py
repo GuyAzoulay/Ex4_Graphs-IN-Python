@@ -1,3 +1,6 @@
+import tkinter
+from typing import List
+
 from DiGraph import DiGraph
 from GraphInterface import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
@@ -9,6 +12,29 @@ from matplotlib.widgets import Button
 import numpy as np
 import random
 
+from types import SimpleNamespace
+import pygame
+from pygame import Color, display, gfxdraw
+from pygame.constants import RESIZABLE
+
+
+# init pygame
+WIDTH, HEIGHT = 1080, 720
+
+pygame.init()
+screen = display.set_mode((WIDTH, HEIGHT), depth=32, flags=RESIZABLE)
+clock = pygame.time.Clock()
+pygame.font.init()
+
+FONT = pygame.font.SysFont('Arial', 20, bold=True)
+
+
+def scale(data, min_screen, max_screen, min_data, max_data):
+    """
+    get the scaled data with proportions min_data, max_data
+    relative to min and max screen dimensions
+    """
+    return int(((data - min_data) / (max_data-min_data)) * (max_screen - min_screen) + min_screen)
 
 class GraphAlgo(GraphAlgoInterface):
 
@@ -99,7 +125,7 @@ class GraphAlgo(GraphAlgoInterface):
     # in this function we measure the shortest path between 2 nodes id
     # we doing it using the Dijksta algorithm and priority queue
 
-    def TSP(self, node_lst: list[int]) -> (list[int], float):
+    def TSP(self, node_lst: List[int]) -> (List[int], float):
         currect_paths = []
         if len(node_lst) == 0:
             return ([], -1)
@@ -133,6 +159,91 @@ class GraphAlgo(GraphAlgoInterface):
             weight += self.graph.edges[e]
         return weight
 
+    def plot_graph(self) -> None:
+        min_x = min(self.graph.nodes.values(), key=lambda pos_x: pos_x[0])[0]
+        min_y = min(self.graph.nodes.values(), key=lambda pos_y: pos_y[1])[1]
+        max_x = max(self.graph.nodes.values(), key=lambda pos_x: pos_x[0])[0]
+        max_y = max(self.graph.nodes.values(), key=lambda pos_y: pos_y[1])[1]
+        while (True):
+            # check events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit(0)
+
+            screen.fill(Color(100, 100, 100))
+            for n in self.graph.nodes.values():
+                x = scale(n[0], 50, screen.get_width() - 50, min_x, max_x)
+                y = scale(n[1], 50, screen.get_height() - 50, min_y, max_y)
+                gfxdraw.filled_circle(screen, x, y, 10, Color(120, 69, 42))
+                gfxdraw.aacircle(screen, x, y, 10, Color(255, 255, 255))
+            clock.tick(60)
+            for e in self.graph.edges.keys():
+                src_x = scale(self.graph.nodes[e[0]][0], 50, screen.get_width() - 50, min_x, max_x)
+                src_y = scale(self.graph.nodes[e[0]][1], 50, screen.get_height() - 50, min_y, max_y)
+                dest_x = scale(self.graph.nodes[e[1]][0], 50, screen.get_width() - 50, min_x, max_x)
+                dest_y = scale(self.graph.nodes[e[1]][1], 50, screen.get_height() - 50, min_y, max_y)
+                pygame.draw.line(screen, Color(61, 72, 126),
+                                 (src_x, src_y), (dest_x, dest_y))
+            display.update()
+            r = tkinter.Tk()
+            r.title('My GUI')
+            center = tkinter.Button(r, text='show center', width=25, command=self.centerPoint())
+            center.pack()
+            r.mainloop()
+        # nodes = self.graph.nodes
+        # edges = self.graph.edges
+        # ids, x, y = [], [], []
+        # # z=[]
+        # for k, v in nodes.items():
+        #     ids.append(k)
+        #     if v != None:
+        #         x.append(v[0])
+        #         y.append(v[1])
+        #     else:
+        #         if k <= 2:
+        #             x.append(5 * k)
+        #             y.append(4 * k)
+        #         else:
+        #             b = random.random()
+        #             c = random.random()
+        #             x.append(k * k * b)
+        #             y.append(k * k * c)
+        #
+        # fig = plt.figure()
+        # ax = fig.subplots()
+        # plt.subplots_adjust(bottom=0.4)
+        # p, = ax.plot(x, y, color="black", marker="o")
+        # fig.set_size_inches(17.5, 7.5, forward=True)
+        # ax.scatter(x, y, c='red')
+        #
+        # for i, txt in enumerate(ids):
+        #     ax.annotate(txt, (x[i], y[i]), color='red')
+        #
+        # for src, dest in edges.keys():
+        #     if nodes[src] != None and nodes[dest] != None:
+        #         _x, _y, _ = nodes[src]
+        #         _dx, _dy, _ = np.array(nodes[dest]) - np.array(nodes[src])
+        #         r = 0.2
+        #         x, y = _x + r * _dx, _y + r * _dy
+        #         dx, dy = (1 - r) * _dx, (1 - r) * _dy
+        #         plt.arrow(x, y, dx, dy, width=5e-5, length_includes_head=True)
+        #     else:
+        #         plt.arrow(x[src], y[src], x[dest], y[dest], width=5e-5, length_includes_head=True)
+
+        # def add_edge(id1, id2):
+        #     if nodes.keys().__contains__(id1) and nodes.keys().__contains__(id2):
+        #         x, y, _ = nodes[id1]
+        #         dx, dy, _ = nodes[id2]
+        #         ax.plot(x, y, color="blue")
+
+        # axes =plt.axes([0.06, 0.05, 0.15, 0.075])
+        # edge_button= Button(axes,'ADD EDGE',color= "blue")
+        # edge_button.on_clicked(add_edge(1
+
+        plt.show()
+
+
 
 def centerPoint(self) -> (int, float):
     if not self.isConnected(self.graph):
@@ -149,61 +260,9 @@ def centerPoint(self) -> (int, float):
     key_list = list(dict.keys())
     value_list = list(dict.values())
     t = value_list.index(i)
+
+
     return t, i
-
-
-def plot_graph(self) -> None:
-    nodes = self.graph.nodes
-    edges = self.graph.edges
-    ids, x, y = [], [], []
-    # z=[]
-    for k, v in nodes.items():
-        ids.append(k)
-        if v != None:
-            x.append(v[0])
-            y.append(v[1])
-        else:
-            if k <= 2:
-                x.append(5 * k)
-                y.append(4 * k)
-            else:
-                b = random.random()
-                c = random.random()
-                x.append(k * k * b)
-                y.append(k * k * c)
-
-    fig = plt.figure()
-    ax = fig.subplots()
-    plt.subplots_adjust(bottom=0.4)
-    p, = ax.plot(x, y, color="black", marker="o")
-    fig.set_size_inches(17.5, 7.5, forward=True)
-    ax.scatter(x, y, c='red')
-
-    for i, txt in enumerate(ids):
-        ax.annotate(txt, (x[i], y[i]), color='red')
-
-    for src, dest in edges.keys():
-        if nodes[src] != None and nodes[dest] != None:
-            _x, _y, _ = nodes[src]
-            _dx, _dy, _ = np.array(nodes[dest]) - np.array(nodes[src])
-            r = 0.2
-            x, y = _x + r * _dx, _y + r * _dy
-            dx, dy = (1 - r) * _dx, (1 - r) * _dy
-            plt.arrow(x, y, dx, dy, width=5e-5, length_includes_head=True)
-        else:
-            plt.arrow(x[src], y[src], x[dest], y[dest], width=5e-5, length_includes_head=True)
-
-    def add_edge(id1, id2):
-        if nodes.keys().__contains__(id1) and nodes.keys().__contains__(id2):
-            x, y, _ = nodes[id1]
-            dx, dy, _ = nodes[id2]
-            ax.plot(x, y, color="blue")
-
-    # axes =plt.axes([0.06, 0.05, 0.15, 0.075])
-    # edge_button= Button(axes,'ADD EDGE',color= "blue")
-    # edge_button.on_clicked(add_edge(1,10))
-
-    plt.show()
 
 
 def isConnected(self, g):
@@ -221,7 +280,7 @@ def DFS(self, graph, nodeid, visit):
     for e in self.graph.all_out_edges_of_node(nodeid):
         if not visit[e[1]]:
             self.DFS(graph, e[1], visit)
-
+# galgo.plot_graph()
 
 if __name__ == '__main__':
     galgo = GraphAlgo()
@@ -238,4 +297,3 @@ if __name__ == '__main__':
     print(g)
     print((galgo.TSP([0, 1, 5])))
     e = g.edges
-# galgo.plot_graph()

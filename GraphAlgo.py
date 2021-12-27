@@ -1,8 +1,11 @@
 import math
-import tkinter
-from tkinter import simpledialog
+import _tkinter
+from _tkinter import *
 from typing import List
-import tkinter.messagebox
+
+from IPython.utils.timing import clock
+from future.moves import tkinter
+from future.moves.tkinter import simpledialog,messagebox
 from DiGraph import DiGraph
 from GraphInterface import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
@@ -12,9 +15,7 @@ import pygame
 from pygame import Color, display, gfxdraw, font
 from pygame.constants import RESIZABLE
 
-# init pygame
 WIDTH, HEIGHT = 1080, 720
-
 pygame.init()
 screen = display.set_mode((WIDTH, HEIGHT), depth=32, flags=RESIZABLE)
 clock = pygame.time.Clock()
@@ -22,15 +23,8 @@ pygame.font.init()
 
 FONT = pygame.font.SysFont('Arial', 20, bold=True)
 
-
 def scale(data, min_screen, max_screen, min_data, max_data):
-    """
-    get the scaled data with proportions min_data, max_data
-    relative to min and max screen dimensions
-    """
     return int(((data - min_data) / (max_data - min_data)) * (max_screen - min_screen) + min_screen)
-
-
 def draw_arrow(color, start, end):
     rotation = math.degrees(math.atan2(start[1] - end[1], end[0] - start[0])) + 90
     pygame.draw.polygon(screen, color, (
@@ -38,16 +32,16 @@ def draw_arrow(color, start, end):
         (end[0] + 10 * math.sin(math.radians(rotation - 120)), end[1] + 10 * math.cos(math.radians(rotation - 120))),
         (end[0] + 10 * math.sin(math.radians(rotation + 120)), end[1] + 10 * math.cos(math.radians(rotation + 120)))))
 
-
+# in this class we implement known algorithms  using the graph
+# structure we built earlier
 class GraphAlgo(GraphAlgoInterface):
 
     def __init__(self, graph: DiGraph = None):
         self.graph = DiGraph() if graph is None else graph
 
+    # get graph is function which return us the graph we work on
     def get_graph(self) -> GraphInterface:
         return self.graph
-
-    # getting the graph information
 
     def load_from_json(self, file_name: str) -> bool:
         try:
@@ -79,14 +73,13 @@ class GraphAlgo(GraphAlgoInterface):
                             'pos': f"{self.graph.nodes[key][0]},{self.graph.nodes[key][1]},{self.graph.nodes[key][2]}",
                             'id': key}
                         ans["Nodes"].append(tempdict)
-                # else:
-                #   tempdict={'pos':None,'id':self.graph.nodes.values().-}
             for key in self.graph.edges.keys():
                 temp_Edge_Dict = {'src': key[0], 'w': self.graph.edges[key], 'dest': key[1]}
                 ans["Edges"].append(temp_Edge_Dict)
             json.dump(ans, fp=f, indent=2)
             return True
-        # Here we are saving the graph in json file format
+        # Here we are saving the graph in json file format, we going through all the nodes and it
+        # variables, and Edges and it variables and save it in a new file format
 
     def shortest_path(self, id1: int, id2: int) -> (float, list):
         dict = {node: float('inf') for node in range(self.graph.v_size())}
@@ -126,9 +119,12 @@ class GraphAlgo(GraphAlgoInterface):
         return (dict.get(id2), shortestPath)
 
     # in this function we measure the shortest path between 2 nodes id
-    # we doing it using the Dijksta algorithm and priority queue
+    # we doing it using the Dijksta algorithm and priority queue,
+    # at first we update all the nodes "weight" to infinity except the first one,
+    # than we ran on all the other nodes and mark every node if we visit in or not,
+    # also we update the previous node we walk from, in ain to return the path we walk in
 
-    def TSP(self, node_lst: List[int]) -> (List[int], float):
+    def TSP(self, node_lst: list[int]) -> (list[int], float):
         currect_paths = []
         if len(node_lst) == 0:
             return ([], -1)
@@ -154,6 +150,16 @@ class GraphAlgo(GraphAlgoInterface):
             weight_list.append((currect, self.weight_calc(currect)))
 
         return min(weight_list, key=lambda lst: lst[1])
+        # the known problem; TSP, Travel SalesMan Problem, here we are given a list of city and we
+        # need to find the shortest path which go through all this cities and the weight of this
+        # path, we doing it thanks to the Dijkstra algorithm, we ran on every node in the city
+        # list and put the shortest path between every two in a temp list.
+        # than we are checking if there is a path that contain all the cities that is given to us
+        # and put that list in a list that contain all the paths that contain the cities inside
+        # if we didnt find one like this we merge between two lists that the last value in one list is the first
+        # of the other list and the first one of the same list is not equal to the last one of the second list,
+        # we are doing it in aim to not create a circle path, that we are returning the path with the min weight
+        # using a help function that calculate the total path.
 
     def weight_calc(self, list):
         weight = 0
@@ -165,17 +171,32 @@ class GraphAlgo(GraphAlgoInterface):
                 continue
         return weight
 
-    # def showCenter(self):
-    #     min_x = min(self.graph.nodes.values(), key=lambda pos_x: pos_x[0])[0]
-    #     min_y = min(self.graph.nodes.values(), key=lambda pos_y: pos_y[1])[1]
-    #     max_x = max(self.graph.nodes.values(), key=lambda pos_x: pos_x[0])[0]
-    #     max_y = max(self.graph.nodes.values(), key=lambda pos_y: pos_y[1])[1]
-    #     center = self.centerPoint()[0]
-    #     x = scale(self.graph.nodes[center][0], 50, screen.get_width() - 50, min_x, max_x)
-    #     y = scale(self.graph.nodes[center][1], 50, screen.get_height() - 50, min_y, max_y)
-    #     gfxdraw.filled_circle(screen, x, y, 10, Color(0, 0, 0))
-    #     gfxdraw.aacircle(screen, x, y, 10, Color(255, 255, 255))
-    #     display.update()
+    # a function that help me to calculate the weight of each list
+
+    def centerPoint(self) -> (int, float):
+        if not self.isConnected(self.graph):
+            return (-1,float('inf'))
+        dict = {}
+        for node1 in self.graph.nodes.keys():
+            temp_dict = {}
+            for node2 in self.graph.nodes.keys():
+                if (node1 != node2):
+                    weight = self.shortest_path(node1, node2)[0]
+                    temp_dict[(node1, node2)] = weight
+            dict[node1] = max(temp_dict.values())
+        i = min(dict.values())
+        key_list = list(dict.keys())
+        value_list = list(dict.values())
+        t = value_list.index(i)
+
+        return t, i
+
+    # the center function return us the node that is the center of the graph,
+    # we doing it like this: for every node we are measuring the shortest path from the whole
+    # other nodes and take the max from it, after we did it to the whole other nodes we
+    # return the min between all the max.
+    # of course that in the beginning we check that the graph is strongly connected
+
     def plot_graph(self) -> None:
         min_x = min(self.graph.nodes.values(), key=lambda pos_x: pos_x[0])[0]
         min_y = min(self.graph.nodes.values(), key=lambda pos_y: pos_y[1])[1]
@@ -283,25 +304,10 @@ class GraphAlgo(GraphAlgoInterface):
             display.update()
             clock.tick(60)
 
-    def centerPoint(self) -> (int, float):
-        if not self.isConnected(self.graph):
-            return None
-        dict = {}
-        for node1 in self.graph.nodes.keys():
-            temp_dict = {}
-            for node2 in self.graph.nodes.keys():
-                if (node1 != node2):
-                    weight = self.shortest_path(node1, node2)[0]
-                    temp_dict[(node1, node2)] = weight
-            dict[node1] = max(temp_dict.values())
-        i = min(dict.values())
-        key_list = list(dict.keys())
-        value_list = list(dict.values())
-        t = value_list.index(i)
 
-        return t, i
 
     def isConnected(self, g):
+
         for nodeid in self.graph.get_all_v().keys():
             visit = [False] * self.graph.v_size()
             self.DFS(g, nodeid, visit)
@@ -310,8 +316,12 @@ class GraphAlgo(GraphAlgoInterface):
                     return False
         return True
 
+    # checking if a graph is strongly connected for the center function, we doing it
+    # using the DFS algorithm
+
     def DFS(self, graph, nodeid, visit):
         visit[nodeid] = True
+
         for e in self.graph.all_out_edges_of_node(nodeid):
             if not visit[e[1]]:
                 self.DFS(graph, e[1], visit)
@@ -319,7 +329,6 @@ class GraphAlgo(GraphAlgoInterface):
 
 if __name__ == '__main__':
     galgo = GraphAlgo()
-    a = {1: 2, 3: 4}
     galgo.load_from_json("A0.json")
     # galgo.save_to_json("new.json")
     # for x in a:
@@ -329,6 +338,9 @@ if __name__ == '__main__':
     # print((galgo.centerPoint()))
     # print(galgo.graph.get_all_v())
     g = galgo.graph
-    print(g)
-    print((galgo.TSP([0, 1, 5])))
-    e = g.edges
+    #print(galgo.graph)
+    galgo.plot_graph()
+    #print(galgo.TSP([0,1,6]))
+# print(galgo.centerPoint())
+#  e = g.edges
+# galgo.plot_graph()

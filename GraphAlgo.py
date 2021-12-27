@@ -2,19 +2,12 @@ import math
 import tkinter
 from tkinter import simpledialog
 from typing import List
-
+import tkinter.messagebox
 from DiGraph import DiGraph
 from GraphInterface import GraphInterface
 from GraphAlgoInterface import GraphAlgoInterface
 import json
 from queue import PriorityQueue
-import matplotlib.pyplot as plt
-import matplotlib.widgets as wgt
-from matplotlib.widgets import Button
-import numpy as np
-import random
-
-from types import SimpleNamespace
 import pygame
 from pygame import Color, display, gfxdraw, font
 from pygame.constants import RESIZABLE
@@ -41,9 +34,9 @@ def scale(data, min_screen, max_screen, min_data, max_data):
 def draw_arrow(color, start, end):
     rotation = math.degrees(math.atan2(start[1] - end[1], end[0] - start[0])) + 90
     pygame.draw.polygon(screen, color, (
-    (end[0] + 10 * math.sin(math.radians(rotation)), end[1] + 10 * math.cos(math.radians(rotation))),
-    (end[0] + 10 * math.sin(math.radians(rotation - 120)), end[1] + 10 * math.cos(math.radians(rotation - 120))),
-    (end[0] + 10 * math.sin(math.radians(rotation + 120)), end[1] + 10 * math.cos(math.radians(rotation + 120)))))
+        (end[0] + 10 * math.sin(math.radians(rotation)), end[1] + 10 * math.cos(math.radians(rotation))),
+        (end[0] + 10 * math.sin(math.radians(rotation - 120)), end[1] + 10 * math.cos(math.radians(rotation - 120))),
+        (end[0] + 10 * math.sin(math.radians(rotation + 120)), end[1] + 10 * math.cos(math.radians(rotation + 120)))))
 
 
 class GraphAlgo(GraphAlgoInterface):
@@ -166,7 +159,10 @@ class GraphAlgo(GraphAlgoInterface):
         weight = 0
         for i in list:
             e = (i, i + 1)
-            weight += self.graph.edges[e]
+            if e in self.graph.edges.keys():
+                weight += self.graph.edges[e]
+            else:
+                continue
         return weight
 
     # def showCenter(self):
@@ -187,15 +183,13 @@ class GraphAlgo(GraphAlgoInterface):
         max_y = max(self.graph.nodes.values(), key=lambda pos_y: pos_y[1])[1]
         running = True
         isCenter = []
-        active = False
-        text = ''
+        tsp = []
         while running:
             click = False
             screen.fill(Color(100, 100, 100))
             # Drawing the nodes
             scaled_x = {}
             scaled_y = {}
-
             for id, n in self.graph.nodes.items():
                 x = scale(n[0], 50, screen.get_width() - 50, min_x, max_x)
                 y = scale(n[1], 50, screen.get_height() - 50, min_y, max_y)
@@ -205,7 +199,8 @@ class GraphAlgo(GraphAlgoInterface):
                 gfxdraw.aacircle(screen, x, y, 10, Color(255, 255, 255))
                 if isCenter == id:
                     gfxdraw.filled_circle(screen, x, y, 10, Color(0, 0, 0))
-                    gfxdraw.aacircle(screen, x, y, 10, Color(0, 0, 0))
+                if len(tsp) != 0 and id in tsp:
+                    gfxdraw.filled_circle(screen, x, y, 10, Color(0, 255, 0))
                 id_srf = FONT.render(str(id), True, pygame.Color(255, 255, 255))
                 rect = id_srf.get_rect(center=(x, y))
                 screen.blit(id_srf, rect)
@@ -218,7 +213,17 @@ class GraphAlgo(GraphAlgoInterface):
                 dest_y = scale(self.graph.nodes[e[1]][1], 50, screen.get_height() - 50, min_y, max_y)
                 pygame.draw.line(screen, Color(61, 72, 126),
                                  (src_x, src_y), (dest_x, dest_y), width=2)
-                draw_arrow("black", [src_x, src_y], [(src_x+dest_x)/2, (src_y+dest_y)/2])
+                draw_arrow("black", [src_x, src_y], [(src_x + dest_x) / 2, (src_y + dest_y) / 2])
+
+            # Drawing the shortest path(tsp or shortestPath)
+            for i in range(len(tsp) - 1):
+                src_x = scale(self.graph.nodes[tsp[i]][0], 50, screen.get_width() - 50, min_x, max_x)
+                src_y = scale(self.graph.nodes[tsp[i]][1], 50, screen.get_height() - 50, min_y, max_y)
+                dest_x = scale(self.graph.nodes[tsp[i + 1]][0], 50, screen.get_width() - 50, min_x, max_x)
+                dest_y = scale(self.graph.nodes[tsp[i + 1]][1], 50, screen.get_height() - 50, min_y, max_y)
+                pygame.draw.line(screen, Color(0, 255, 0),
+                                 (src_x, src_y), (dest_x, dest_y), width=2)
+                draw_arrow("white", [src_x, src_y], [(src_x + dest_x) / 2, (src_y + dest_y) / 2])
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -229,16 +234,7 @@ class GraphAlgo(GraphAlgoInterface):
                     for i in range(len(scaled_y)):
                         if (scaled_y[i] + 10 > pygame.mouse.get_pos()[1] > scaled_y[i] - 10) and \
                                 (scaled_x[i] + 10 > pygame.mouse.get_pos()[0] > scaled_x[i] - 10):
-                            print("Iwas pressed")
-                if event.type == pygame.KEYDOWN:
-                    if active:
-                        if event.key == pygame.K_RETURN:
-                            print(text)
-                            text = ''
-                        elif event.key == pygame.K_BACKSPACE:
-                            text = text[:-1]
-                        else:
-                            text += event.unicode
+                            print()
 
             button1 = pygame.Rect(0, 0, 60, 45)
             pygame.draw.rect(screen, (52, 235, 177), button1, border_radius=10)
@@ -260,20 +256,30 @@ class GraphAlgo(GraphAlgoInterface):
                     center = self.centerPoint()
                     isCenter = center[0]
                 elif button2.collidepoint(pos):
-                    active = True
-                    print("Enter the cities ID's you wish to travel (sperate)")
-                elif button4.collidepoint(pos):
                     ROOT = tkinter.Tk()
-
                     ROOT.withdraw()
-                    # the input dialog
                     cities = simpledialog.askstring(title="TSP",
-                                                      prompt="Enter city Id's and space between each city")
+                                                    prompt="Enter city Id's and space between each city")
                     cities = cities.split()
-
-                    # check it out
-                    print(self.TSP(cities))
-                    isCenter=[]
+                    for i in range(len(cities)):
+                        cities[i] = int(cities[i])
+                    tsp = self.TSP(cities)
+                    tkinter.messagebox.showinfo("Length Of Path", tsp[1])
+                    tsp = tsp[0]
+                elif button3.collidepoint(pos):
+                    ROOT = tkinter.Tk()
+                    ROOT.withdraw()
+                    src = simpledialog.askstring(title="Shortest Path",
+                                                 prompt="Source")
+                    dest = simpledialog.askstring(title="Shortest Path",
+                                                  prompt=["Destination"])
+                    tsp = self.shortest_path(int(src), int(dest))
+                    print(tsp)
+                    tkinter.messagebox.showinfo("Length Of Path", tsp[0])
+                    tsp = tsp[1]
+                elif button4.collidepoint(pos):
+                    isCenter = []
+                    tsp = []
             display.update()
             clock.tick(60)
 
@@ -309,7 +315,6 @@ class GraphAlgo(GraphAlgoInterface):
         for e in self.graph.all_out_edges_of_node(nodeid):
             if not visit[e[1]]:
                 self.DFS(graph, e[1], visit)
-
 
 
 if __name__ == '__main__':

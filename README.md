@@ -70,4 +70,11 @@ The main veriables which we use in this class are:
 |save_to_json| saving the file of the graph|O(V+E) 
 
 
-##
+## Graph Function Examples:
+
+![WhatsApp Image 2021-12-27 at 19 47 10](https://user-images.githubusercontent.com/87694635/147495775-37c51dbc-1b41-481d-bf08-849d479bf18d.jpeg)
+![WhatsApp Image 2021-12-27 at 19 46 59](https://user-images.githubusercontent.com/87694635/147495777-70696024-4b14-4179-ac32-c15a49a5e4a2.jpeg)
+![WhatsApp Image 2021-12-27 at 19 46 40](https://user-images.githubusercontent.com/87694635/147495778-668657b1-e65e-4010-bc63-d7bd9d5b2f8b.jpeg)
+![WhatsApp Image 2021-12-27 at 19 46 36](https://user-images.githubusercontent.com/87694635/147495779-4010019c-998c-4776-8dbe-8635b00274a1.jpeg)
+
+

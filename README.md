@@ -77,4 +77,65 @@ The main veriables which we use in this class are:
 ![WhatsApp Image 2021-12-27 at 19 46 59](https://user-images.githubusercontent.com/87694635/147495777-70696024-4b14-4179-ac32-c15a49a5e4a2.jpeg)
 ![WhatsApp Image 2021-12-27 at 19 47 10](https://user-images.githubusercontent.com/87694635/147495775-37c51dbc-1b41-481d-bf08-849d479bf18d.jpeg)
 
+### Jave Vs Python
+
+After we did the same work in Java and in Python we got some interesting conclusions.
+When we did the project in java, a simple function could take us three times or maybe more raws of code (compared to Python).
+But in this project we understood that the amout of lines isn't a factor in coding languges, there are many othe factor such as
+run time, split to section and more.
+
+When we ran simple graph is Java (the given one) the max time that any function took to solve is maybe 1 sec, unlike python,
+in python it was a little bit different, simple programs such as shortest path os if a graph is connected took to the code in python
+a little bit more time.
+
+When we make a little bit research about the resons of its slowliness, we learned that beacause Pyhton is such a high level language
+it is very "far" from the hardware, unlike other programming languges, In addition, Python's database access layer is found to be bit underdeveloped and primitive . However, it cannot be applied in the enterprises that need smooth interaction of complex legacy data.
+And the last disadventage ( out of many) python has a lot Runtime errors, the reason for that is python language is dynamically typed ,
+ it requires more testing and has errors that only show up at runtime .
+ 
+ ### RunTime between Java and Python
+ |Java|1000 Nodes|10,000 Nodes|100,000 Nodes|     
+ |---|---|---|---|                                         
+ |Build Graph|0.0081 sec|0.213 sec| 18.341 sec|
+ |Center|0.22 sec| TimeOut| TimeOut|
+ |Shortest Path| 0.187 sec| 1.954 sec| 14.517 sec|
+ |TSP(3 cities)| 0.487 sec| 14.62 sec| 62.254 sec|
+ 
+ ![JavaRunTime](https://user-images.githubusercontent.com/87694635/147560036-0bbecd6e-7631-4281-9373-44d93b92df2c.png)
+
+ 
+ |Python|1000 Nodes|10,000 Nodes|100,000 Nodes|
+ |---|---|---|---|
+ |Build Graph|0.016 sec|0.285 sec| 26.764 sec|
+ |Center|0.27 sec| Timeout| Timeout|
+ |Shortest Path|0.215 sec| 2.021 sec|19.546 sec|
+ |TSP (3 cities)|0.765 sec| 17.56 sec| 87.654 sec|
+ 
+ ![Python runTime](https://user-images.githubusercontent.com/87694635/147560053-b4ce1c8c-d033-4dd1-b14d-8d0c41789581.png)
+
+#### As we can see in the two charts, when the amount of nodes are getting bigger and bigget, Java RunTime is getting better against python.
+
+# Examples of Algorithms on Given Graphs
+ 
+|Algorythm|Graph T0|Graph A0|Graph A1|Graph A2|Graph A3|Graph A4|Graph A5|
+|---|---|---|---|---|---|---|---|
+|isConnected|False|True|True|True|True|True|True|
+|centerPoint and Distansce|None|7 -> 6.8068|8 -> 9.92528|0 -> 7.8199|2 -> 2.1822|6 -> 8.0713|40 ->9.2917
+|ShortestPath for node 0 and node 8|None|[0,10,9,8] -> 4.008|[0,1,2,6,7,8] -> 7.4368|[0,1,26,8] -> 3.5127|[0,1,26,8] -> 3.5127|[0, 1, 2, 30, 31, 32, 7, 8] ->9.1643|[0,8] -> 0.9|
+|TSP -> [0,7,8]|None|[7, 8, 9, 10, 0] -> 5.4063|[0, 1, 2, 6, 7, 8] -> 7.4368|[0, 1, 26, 8, 7] -> 4.7944|[0, 1, 26, 8, 7] -> 4.7944|[0, 1, 2, 30, 31, 32, 7, 8] -> 9.1643|[0, 8, 7] -> 2.049|
+  
+  
+  ## Resources
+ 
+ [DFS Algorythm](https://en.wikipedia.org/wiki/Depth-first_search)
+ 
+ [Center in Graph](https://en.wikipedia.org/wiki/Graph_center)
+ 
+ [Kosaraju's algorithm](https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm)
+ 
+ [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)
+
+
+
+
 
